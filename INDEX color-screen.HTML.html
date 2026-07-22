@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Screen Online · Φωτεινή Οθόνη Χρώματος</title>
+<style>
+  :root{
+    --bg:#f4f5f7;
+    --card:#ffffff;
+    --text:#1c1e21;
+    --muted:#6b7280;
+    --accent:#2563eb;
+    --border:#e5e7eb;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 24px;
+    background:var(--card);
+    border-bottom:1px solid var(--border);
+  }
+  .logo{
+    font-weight:800;
+    font-size:20px;
+    color:var(--accent);
+    text-decoration:none;
+  }
+  main{
+    max-width:900px;
+    margin:0 auto;
+    padding:32px 16px 64px;
+  }
+  h1{
+    text-align:center;
+    font-size:28px;
+    margin-bottom:8px;
+  }
+  p.subtitle{
+    text-align:center;
+    color:var(--muted);
+    margin-top:0;
+    margin-bottom:28px;
+  }
+  .swatches{
+    display:flex;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:14px;
+    margin-bottom:24px;
+  }
+  .swatch-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:14px;
+    text-align:center;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .swatch-card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 6px 16px rgba(0,0,0,.08);
+  }
+  .swatch-card.active{
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(37,99,235,.2);
+  }
+  .swatch{
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    border:2px solid var(--border);
+    margin:0 auto 10px;
+  }
+  .swatch-card .name{
+    font-weight:700;
+    font-size:14px;
+    margin-bottom:4px;
+  }
+  .swatch-card .desc{
+    color:var(--muted);
+    font-size:12.5px;
+    line-height:1.5;
+  }
+  .preview-wrap{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+  }
+  .preview{
+    width:100%;
+    height:320px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    cursor:pointer;
+  }
+  .controls{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    align-items:center;
+    justify-content:center;
+    margin-top:18px;
+  }
+  select, input[type=number]{
+    padding:8px 10px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    font-size:14px;
+  }
+  button{
+    padding:10px 18px;
+    border-radius:8px;
+    border:none;
+    background:var(--accent);
+    color:#fff;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  button.secondary{
+    background:#fff;
+    color:var(--accent);
+    border:1px solid var(--accent);
+  }
+  .dims{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .dims input{width:80px;}
+  #fullscreenLayer{
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    display:none;
+    cursor:none;
+  }
+  #fullscreenLayer.visible{display:block;}
+  .exit-hint{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    background:rgba(0,0,0,.6);
+    color:#fff;
+    padding:8px 16px;
+    border-radius:20px;
+    font-size:13px;
+    opacity:0;
+    transition:opacity .3s;
+    pointer-events:none;
+  }
+  #fullscreenLayer:hover .exit-hint{opacity:1;}
+
+  .effects{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:14px;
+    margin:28px 0 8px;
+  }
+  .effect-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px;
+    text-align:center;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .effect-card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 6px 16px rgba(0,0,0,.08);
+  }
+  .effect-card .icon{
+    font-size:28px;
+    margin-bottom:8px;
+  }
+  .effect-card .name{
+    font-weight:600;
+    font-size:14px;
+  }
+  .effect-card .desc{
+    color:var(--muted);
+    font-size:12.5px;
+    line-height:1.5;
+    margin-top:6px;
+  }
+  #effectCanvas{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    display:none;
+  }
+
+  .faq{
+    max-width:720px;
+    margin:0 auto;
+  }
+  .faq-item{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:14px 18px;
+    margin-bottom:10px;
+  }
+  .faq-item summary{
+    cursor:pointer;
+    font-weight:600;
+    font-size:15px;
+    list-style:none;
+  }
+  .faq-item summary::-webkit-details-marker{display:none;}
+  .faq-item summary::before{
+    content:'+ ';
+    color:var(--accent);
+    font-weight:800;
+  }
+  .faq-item[open] summary::before{
+    content:'– ';
+  }
+  .faq-item p{
+    color:var(--muted);
+    font-size:14px;
+    line-height:1.6;
+    margin:10px 0 2px;
+  }
+
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:13px;
+    padding:24px 0 32px;
+  }
+  .footer-links{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:18px;
+    margin-bottom:12px;
+  }
+  .footer-links a{
+    color:var(--accent);
+    text-decoration:none;
+    font-size:13px;
+    font-weight:600;
+  }
+  .footer-links a:hover{
+    text-decoration:underline;
+  }
+
+  .fs-download-btn{
+    position:fixed;
+    bottom:24px;
+    right:24px;
+    z-index:10000;
+    background:rgba(0,0,0,0.55);
+    color:#fff;
+    border:1px solid rgba(255,255,255,0.4);
+    border-radius:8px;
+    padding:10px 16px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    opacity:0;
+    transition:opacity .25s;
+  }
+  #fullscreenLayer:hover .fs-download-btn{opacity:1;}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="#">ColorScreen</a>
+  <div style="color:var(--muted); font-size:13px;">Δωρεάν εργαλείο οθόνης · χωρίς εγγραφή</div>
+</header>
+
+<main>
+  <h1>Οθόνη Χρώματος Online</h1>
+  <p class="subtitle">Μετατρέψτε την οθόνη σας σε φωτεινή πηγή φωτός — για κλήσεις βίντεο, φωτογραφία, ζωγραφική ή απλά χαλάρωση.</p>
+
+  <div class="swatches" id="swatches"></div>
+
+  <div class="preview-wrap">
+    <div class="preview" id="preview" style="background:#ffffff;" title="Κλικ για πλήρη οθόνη"></div>
+
+    <div class="controls">
+      <select id="resolution">
+        <option value="">Ανάλυση οθόνης (default)</option>
+        <option value="640x480">480p</option>
+        <option value="1280x720">720p</option>
+        <option value="1920x1080">1080p</option>
+        <option value="2560x1440">1440p (2K)</option>
+        <option value="3840x2160">2160p (4K)</option>
+        <option value="7680x4320">4320p (8K)</option>
+      </select>
+
+      <div class="dims">
+        <input type="number" id="customW" placeholder="πλάτος px">
+        <span>×</span>
+        <input type="number" id="customH" placeholder="ύψος px">
+      </div>
+
+      <button id="downloadBtn" class="secondary">⬇ Λήψη εικόνας</button>
+      <button id="fullscreenBtn">Πλήρης οθόνη</button>
+    </div>
+  </div>
+
+  <p style="text-align:center; color:var(--muted); font-size:14px; margin-top:32px;">
+    Χρήσιμο για: φωτισμό webcam, έλεγχο dead pixels, ζωγραφική με φωτισμό από πίσω, διάβασμα στο σκοτάδι, καθάρισμα οθόνης, ή απλά ένα κενό καμβά για συγκέντρωση.
+  </p>
+
+  <h2 style="text-align:center; margin-top:48px;">Screens για πλάκα</h2>
+  <p class="subtitle">Κινούμενες οθόνες — ανοίγουν σε πλήρη οθόνη, ιδανικές για φάρσα.</p>
+
+  <div class="effects" id="effects">
+    <div class="effect-card" data-effect="broken">
+      <div class="icon">🔨</div>
+      <div class="name">Σπασμένη οθόνη</div>
+      <div class="desc">Ρεαλιστική εικόνα ραγισμένου γυαλιού — για φάρσα σε φίλους ή συναδέλφους.</div>
+    </div>
+    <div class="effect-card" data-effect="update">
+      <div class="icon">🔄</div>
+      <div class="name">Ενημέρωση συστήματος</div>
+      <div class="desc">Μοιάζει με πραγματική ενημέρωση — χρήσιμο όταν θες λίγη ιδιωτικότητα στον υπολογιστή σου.</div>
+    </div>
+    <div class="effect-card" data-effect="radar">
+      <div class="icon">📡</div>
+      <div class="name">Ραντάρ</div>
+      <div class="desc">Αισθητική κατασκοπείας — ωραίο φόντο για βίντεο, streams ή θεματικό πάρτι.</div>
+    </div>
+    <div class="effect-card" data-effect="hacker">
+      <div class="icon">💻</div>
+      <div class="name">Hacker Terminal</div>
+      <div class="desc">Εντυπωσιακό ψευτο-hacking σκηνικό — δημοφιλές για εντυπωσιασμό ή αστεία βίντεο.</div>
+    </div>
+  </div>
+
+  <h3 style="text-align:center; margin-top:36px; color:var(--muted); font-size:15px;">Οθόνες εκκίνησης (γενικό στυλ)</h3>
+  <div class="effects">
+    <div class="effect-card" data-effect="winboot">
+      <div class="icon">🪟</div>
+      <div class="name">Windows-style boot</div>
+      <div class="desc">Φαίνεται σαν να ξεκινάει υπολογιστής — καλό για φάρσα ή σκηνικό παρουσίασης.</div>
+    </div>
+    <div class="effect-card" data-effect="macboot">
+      <div class="icon">🍎</div>
+      <div class="name">Mac-style boot</div>
+      <div class="desc">Καθαρό, λιτό στυλ φόρτωσης — ταιριάζει για minimal αισθητική σε βίντεο ή vitrina.</div>
+    </div>
+    <div class="effect-card" data-effect="ubuntuboot">
+      <div class="icon">🟠</div>
+      <div class="name">Ubuntu-style boot</div>
+      <div class="desc">Στυλ εκκίνησης Linux — ιδανικό για δείξεις σε φίλους πιο τεχνικό περιβάλλον.</div>
+    </div>
+  </div>
+
+  <h3 style="text-align:center; margin-top:36px; color:var(--muted); font-size:15px;">Sports screens</h3>
+  <div class="effects">
+    <div class="effect-card" data-effect="football">
+      <div class="icon">⚽</div>
+      <div class="name">Football</div>
+      <div class="desc">Ζωντανό γήπεδο με μπάλα και σκορ — φόντο για πάρτι θέματος ποδοσφαίρου.</div>
+    </div>
+    <div class="effect-card" data-effect="basketball">
+      <div class="icon">🏀</div>
+      <div class="name">Basketball</div>
+      <div class="desc">Αναπηδά η μπάλα σε γήπεδο με σκορ — διακοσμητικό φόντο για fan μπάσκετ.</div>
+    </div>
+  </div>
+
+  <h3 style="text-align:center; margin-top:36px; color:var(--muted); font-size:15px;">Screensavers</h3>
+  <div class="effects">
+    <div class="effect-card" data-effect="dvd">
+      <div class="icon">📀</div>
+      <div class="name">DVD</div>
+      <div class="desc">Το θρυλικό αναπηδώμενο λογότυπο — νοσταλγία για όσους θυμούνται τα DVD players.</div>
+    </div>
+    <div class="effect-card" data-effect="flipclock">
+      <div class="icon">🕐</div>
+      <div class="name">Flip Clock</div>
+      <div class="desc">Λειτουργικό ρολόι πλήρους οθόνης — χρήσιμο για γραφείο, βιτρίνα ή κομοδίνο.</div>
+    </div>
+    <div class="effect-card" data-effect="nosignal">
+      <div class="icon">📺</div>
+      <div class="name">No Signal</div>
+      <div class="desc">Μοιάζει με χαλασμένη τηλεόραση — αστεία φάρσα ή retro εφέ για βίντεο.</div>
+    </div>
+  </div>
+
+  <h2 style="text-align:center; margin-top:56px;">Συχνές Ερωτήσεις (FAQ)</h2>
+  <div class="faq" id="faq">
+    <details class="faq-item">
+      <summary>Τι ακριβώς κάνει αυτό το εργαλείο;</summary>
+      <p>Μετατρέπει την οθόνη της συσκευής σας σε μια συμπαγή επιφάνεια χρώματος ή σε μια από τις κινούμενες εφέ οθόνες (σπασμένη οθόνη, ραντάρ, hacker terminal κ.λπ.), σε πλήρη οθόνη. Είναι χρήσιμο για φωτισμό κατά τη διάρκεια βιντεοκλήσεων, τεστ οθόνης, φωτογράφιση, ή απλά για πλάκα.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Χρειάζεται εγκατάσταση ή εγγραφή;</summary>
+      <p>Όχι. Το εργαλείο τρέχει εξ ολοκλήρου μέσα στον browser σας. Δεν χρειάζεται λογαριασμός, δεν χρειάζεται download εφαρμογής και δεν απαιτείται καμία πληρωμή.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Λειτουργεί σε κινητό και tablet;</summary>
+      <p>Ναι, η σελίδα είναι πλήρως responsive και λειτουργεί σε browsers κινητών και tablet. Σε ορισμένα κινητά browsers η λειτουργία πλήρους οθόνης ενδέχεται να έχει μικρές διαφορές λόγω περιορισμών του λειτουργικού συστήματος.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Μπορεί να βλάψει την οθόνη μου η χρήση οθόνης πλήρους χρώματος;</summary>
+      <p>Όχι, η προβολή ενός συμπαγούς χρώματος στην οθόνη σας δεν προκαλεί καμία βλάβη στο υλικό της συσκευής σας. Χρησιμοποιείται συχνά ακριβώς για τον αντίθετο λόγο: για να εντοπίσετε νεκρά pixel ή ανομοιομορφίες στον φωτισμό της οθόνης.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Πώς κάνω λήψη μιας εικόνας χρώματος;</summary>
+      <p>Επιλέξτε το χρώμα που θέλετε, διαλέξτε ανάλυση (ή βάλτε δικές σας διαστάσεις) και πατήστε «Λήψη εικόνας». Θα κατέβει αυτόματα ένα αρχείο PNG στον υπολογιστή ή στο κινητό σας.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Συλλέγετε προσωπικά δεδομένα μου;</summary>
+      <p>Δεν απαιτούμε εγγραφή και δεν συλλέγουμε προσωπικά στοιχεία για τη χρήση του βασικού εργαλείου. Για λεπτομέρειες σχετικά με τυχόν cookies ή αναλυτικά στοιχεία χρήσης, δείτε την <a href="privacy-policy.html">Πολιτική Απορρήτου</a> και την <a href="cookie-policy.html">Πολιτική Cookies</a>.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Οι κινούμενες οθόνες (Windows, Mac, Ubuntu κ.λπ.) είναι επίσημες;</summary>
+      <p>Όχι. Πρόκειται για γενικές, εμπνευσμένες οπτικές αναπαραστάσεις με δικό μας κώδικα, στυλ και χρώματα. Δεν χρησιμοποιούμε επίσημα λογότυπα ή κατοχυρωμένα σήματα τρίτων εταιρειών και δεν σχετιζόμαστε με αυτές.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Μπορώ να χρησιμοποιήσω το εργαλείο σε τηλεόραση ή μεγάλη οθόνη;</summary>
+      <p>Ναι, αρκεί η συσκευή σας να διαθέτει browser. Ανοίξτε τη σελίδα, επιλέξτε το επιθυμητό χρώμα ή εφέ και πατήστε πλήρη οθόνη.</p>
+    </details>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-links">
+    <a href="about-us.html">About Us</a>
+    <a href="privacy-policy.html">Privacy Policy</a>
+    <a href="terms-of-use.html">Terms of Use</a>
+    <a href="cookie-policy.html">Cookie Policy</a>
+  </div>
+  <div>© 2026 ColorScreen — Δεν σχετίζεται ούτε αντιγράφει άλλη υπηρεσία.</div>
+</footer>
+
+<div id="fullscreenLayer" style="background:#ffffff;">
+  <canvas id="effectCanvas"></canvas>
+  <button id="fsDownloadBtn" class="fs-download-btn">⬇ Λήψη εικόνας</button>
+  <div class="exit-hint">Πατήστε ESC ή κάντε κλικ για έξοδο</div>
+</div>
+
+<script>
+  const colors = [
+    {name:'Λευκό', hex:'#ffffff', desc:'Μέγιστη φωτεινότητα σαν ring light — ιδανικό για φωτισμό προσώπου σε βιντεοκλήσεις και selfie.'},
+    {name:'Μαύρο', hex:'#000000', desc:'Εξοικονομεί μπαταρία σε οθόνες OLED και βοηθά στον έλεγχο για νεκρά pixel.'},
+    {name:'Κόκκινο', hex:'#e02424', desc:'Διατηρεί τη νυχτερινή όραση — προτιμάται σε αστρονομία ή δωμάτια σκοτεινού θαλάμου.'},
+    {name:'Πράσινο', hex:'#16a34a', desc:'Λειτουργεί σαν green screen (chroma key) για εγγραφές ή ξεκουράζει τα μάτια.'},
+    {name:'Μπλε', hex:'#2563eb', desc:'Ήρεμο, ψυχρό φως — βοηθά στη συγκέντρωση ή σε βραδινό διάβασμα.'},
+    {name:'Κίτρινο', hex:'#facc15', desc:'Ζεστό φως σαν λάμπα βολφραμίου — καλό για ατμόσφαιρα ή φωτογραφία.'},
+    {name:'Πορτοκαλί', hex:'#f97316', desc:'Ζεστό, φιλικό φως που κουράζει λιγότερο τα μάτια σε σχέση με το λευκό το βράδυ.'},
+    {name:'Ροζ', hex:'#ec4899', desc:'Απαλός, κολακευτικός φωτισμός — δημοφιλής επιλογή για selfie και βίντεο.'},
+    {name:'Μωβ', hex:'#9333ea', desc:'Δημιουργική, μυστηριώδης ατμόσφαιρα — αγαπημένο σε gaming setups.'},
+  ];
+
+  const swatchesEl = document.getElementById('swatches');
+  const preview = document.getElementById('preview');
+  const fullscreenLayer = document.getElementById('fullscreenLayer');
+  let currentColor = '#ffffff';
+
+  colors.forEach((c, i) => {
+    const el = document.createElement('div');
+    el.className = 'swatch-card' + (i===0 ? ' active' : '');
+    el.innerHTML = `
+      <div class="swatch" style="background:${c.hex};"></div>
+      <div class="name">${c.name}</div>
+      <div class="desc">${c.desc}</div>
+    `;
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.swatch-card').forEach(s => s.classList.remove('active'));
+      el.classList.add('active');
+      currentColor = c.hex;
+      preview.style.background = c.hex;
+      fullscreenLayer.style.background = c.hex;
+    });
+    swatchesEl.appendChild(el);
+  });
+
+  preview.addEventListener('click', () => enterFullscreen('color'));
+  document.getElementById('fullscreenBtn').addEventListener('click', () => enterFullscreen('color'));
+
+  const effectCanvas = document.getElementById('effectCanvas');
+  const ctx2d = effectCanvas.getContext('2d');
+  let animId = null;
+  let activeMode = 'color';
+
+  document.querySelectorAll('.effect-card').forEach(card => {
+    card.addEventListener('click', () => enterFullscreen(card.dataset.effect));
+  });
+
+  function enterFullscreen(mode){
+    activeMode = mode;
+    fullscreenLayer.classList.add('visible');
+    const req = fullscreenLayer.requestFullscreen || fullscreenLayer.webkitRequestFullscreen;
+    if (req) req.call(fullscreenLayer).catch(()=>{});
+
+    if (mode === 'color') {
+      effectCanvas.style.display = 'none';
+      fullscreenLayer.style.background = currentColor;
+    } else {
+      fullscreenLayer.style.background = '#000000';
+      effectCanvas.style.display = 'block';
+      resizeCanvas();
+      startEffect(mode);
+    }
+  }
+
+  function exitFullscreen(){
+    fullscreenLayer.classList.remove('visible');
+    if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+    if (animId) cancelAnimationFrame(animId);
+    animId = null;
+  }
+
+  function resizeCanvas(){
+    effectCanvas.width = window.innerWidth;
+    effectCanvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', () => {
+    if (activeMode !== 'color' && fullscreenLayer.classList.contains('visible')) {
+      resizeCanvas();
+    }
+  });
+
+  function startEffect(mode){
+    if (animId) cancelAnimationFrame(animId);
+    if (mode === 'broken') runBrokenScreen();
+    else if (mode === 'update') runFakeUpdate();
+    else if (mode === 'radar') runRadar();
+    else if (mode === 'hacker') runHacker();
+    else if (mode === 'winboot') runWinBoot();
+    else if (mode === 'macboot') runMacBoot();
+    else if (mode === 'ubuntuboot') runUbuntuBoot();
+    else if (mode === 'football') runFootball();
+    else if (mode === 'basketball') runBasketball();
+    else if (mode === 'dvd') runDVD();
+    else if (mode === 'flipclock') runFlipClock();
+    else if (mode === 'nosignal') runNoSignal();
+  }
+
+  // ---- Broken screen: cracked glass with subtle glitch flicker ----
+  function runBrokenScreen(){
+    const w = effectCanvas.width, h = effectCanvas.height;
+    // impact origin biased toward one corner, like the reference photo (dense fan spreading from a corner)
+    const ix = w * (0.65 + Math.random()*0.25);
+    const iy = h * (0.1 + Math.random()*0.25);
+
+    // scatter points with density that falls off from the impact origin,
+    // plus a border ring so the mesh reaches every edge of the screen
+    const points = [];
+    const numPoints = 260;
+    const maxR = Math.max(w,h) * 1.15;
+    for (let i=0;i<numPoints;i++){
+      const angle = Math.random()*Math.PI*2;
+      const r = Math.pow(Math.random(), 1.9) * maxR; // biased toward small radius = dense near origin
+      points.push({
+        x: Math.max(-15, Math.min(w+15, ix + Math.cos(angle)*r)),
+        y: Math.max(-15, Math.min(h+15, iy + Math.sin(angle)*r))
+      });
+    }
+    const borderSteps = 14;
+    for (let i=0;i<=borderSteps;i++){
+      const t = i/borderSteps;
+      points.push({x:t*w,y:-8},{x:t*w,y:h+8},{x:-8,y:t*h},{x:w+8,y:t*h});
+    }
+
+    // connect each point to its nearest neighbors to form triangular glass-like facets
+    const edges = [];
+    const k = 3;
+    for (let i=0;i<points.length;i++){
+      const dists = [];
+      for (let j=0;j<points.length;j++){
+        if (i===j) continue;
+        const dx = points[i].x-points[j].x, dy = points[i].y-points[j].y;
+        dists.push({j, d: dx*dx+dy*dy});
+      }
+      dists.sort((a,b)=>a.d-b.d);
+      for (let n=0;n<k;n++){
+        const nb = dists[n];
+        if (!nb) continue;
+        edges.push({
+          x1: points[i].x, y1: points[i].y,
+          x2: points[nb.j].x, y2: points[nb.j].y,
+          w: 0.5 + Math.random()*1.1,
+          glintPhase: Math.random()*Math.PI*2
+        });
+      }
+    }
+
+    let t = 0;
+    function draw(){
+      t += 0.02;
+
+      ctx2d.fillStyle = '#050505';
+      ctx2d.fillRect(0,0,w,h);
+
+      edges.forEach(e => {
+        const shimmer = Math.max(0, Math.sin(t*1.5 + e.glintPhase));
+        const alpha = 0.28 + shimmer*0.55;
+        ctx2d.beginPath();
+        ctx2d.moveTo(e.x1,e.y1);
+        ctx2d.lineTo(e.x2,e.y2);
+        ctx2d.strokeStyle = `rgba(235,235,245,${alpha})`;
+        ctx2d.lineWidth = e.w;
+        ctx2d.stroke();
+      });
+
+      animId = requestAnimationFrame(draw);
+    }
+    draw();
+  }
+
+  // ---- Fake system update ----
+  function runFakeUpdate(){
+    const w = effectCanvas.width, h = effectCanvas.height;
+    let progress = 0;
+    let angle = 0;
+    function draw(){
+      ctx2d.fillStyle = '#0a2a63';
+      ctx2d.fillRect(0,0,w,h);
+      const cx = w/2, cy = h/2 - 40;
+      angle += 0.06;
+      ctx2d.lineWidth = 6;
+      ctx2d.strokeStyle = 'rgba(255,255,255,0.25)';
+      ctx2d.beginPath();
+      ctx2d.arc(cx,cy,36,0,Math.PI*2);
+      ctx2d.stroke();
+      ctx2d.strokeStyle = '#ffffff';
+      ctx2d.beginPath();
+      ctx2d.arc(cx,cy,36,angle, angle+1.6);
+      ctx2d.stroke();
+
+      progress += 0.05;
+      if (progress > 100) progress = 0;
+      ctx2d.fillStyle = '#ffffff';
+      ctx2d.font = '28px -apple-system, Segoe UI, Arial, sans-serif';
+      ctx2d.textAlign = 'center';
+      ctx2d.fillText('Γίνεται ενημέρωση συστήματος', cx, cy+90);
+      ctx2d.font = '18px -apple-system, Segoe UI, Arial, sans-serif';
+      ctx2d.fillStyle = 'rgba(255,255,255,0.75)';
+      ctx2d.fillText(Math.floor(progress) + '% ολοκληρώθηκε', cx, cy+122);
+      ctx2d.fillText('Μην απενεργοποιήσετε τον υπολογιστή σας', cx, cy+150);
+
+      animId = requestAnimationFrame(draw);
+    }
+    draw();
+  }
+
+  // ---- Radar sweep ----
+  function runRadar(){
+    const w = effectCanvas.width, h = effectCanvas.height;
+    const cx = w/2, cy = h/2;
+    const R = Math.min(w,h)/2 - 20;
+    let sweep = 0;
+    const blips = [];
+    for (let i=0;i<8;i++){
+      blips.push({
+        angle: Math.random()*Math.PI*2,
+        r: Math.random()*R*0.9,
+        life: 0
+      });
+    }
+    function draw(){
+      ctx2d.fillStyle = '#001a00';
+      ctx2d.fillRect(0,0,w,h);
+      ctx2d.strokeStyle = 'rgba(0,255,120,0.35)';
+      ctx2d.lineWidth = 1;
+      for (let r=R/4; r<=R; r+=R/4){
+        ctx2d.beginPath();
+        ctx2d.arc(cx,cy,r,0,Math.PI*2);
+        ctx2d.stroke();
+      }
+      ctx2d.beginPath();
+      ctx2d.moveTo(cx-R,cy); ctx2d.lineTo(cx+R,cy);
+      ctx2d.moveTo(cx,cy-R); ctx2d.lineTo(cx,cy+R);
+      ctx2d.stroke();
+
+      sweep += 0.03;
+      const grad = ctx2d.createConicGradient ? ctx2d.createConicGradient(sweep-1.2, cx, cy) : null;
+      ctx2d.save();
+      ctx2d.beginPath();
+      ctx2d.moveTo(cx,cy);
+      ctx2d.arc(cx,cy,R,sweep-0.5,sweep);
+      ctx2d.closePath();
+      ctx2d.fillStyle = 'rgba(0,255,100,0.25)';
+      ctx2d.fill();
+      ctx2d.restore();
+
+      ctx2d.beginPath();
+      ctx2d.moveTo(cx,cy);
+      ctx2d.lineTo(cx+Math.cos(sweep)*R, cy+Math.sin(sweep)*R);
+      ctx2d.strokeStyle = '#00ff88';
+      ctx2d.lineWidth = 2;
+      ctx2d.stroke();
+
+      blips.forEach(b => {
+        b.life += 0.01;
+        if (b.life > 1){
+          b.angle = Math.random()*Math.PI*2;
+          b.r = Math.random()*R*0.9;
+          b.life = 0;
+        }
+        const bx = cx+Math.cos(b.angle)*b.r;
+        const by = cy+Math.sin(b.angle)*b.r;
+        ctx2d.beginPath();
+        ctx2d.arc(bx,by,4,0,Math.PI*2);
+        ctx2d.fillStyle = `rgba(0,255,120,${1-b.life})`;
+        ctx2d.fill();
+      });
+
+      animId = requestAnimationFrame(draw);
+    }
+    draw();
+  }
+
+  // ---- Hacker terminal ----
+  function runHacker(){
+    const w = effectCanvas.width, h = effectCanvas.height;
+    const cols = Math.floor(w/16);
+    const drops = new Array(cols).fill(0);
+    const chars = '01ΑΒΓΔΕΖΗΘαβγδεζηθ$#@%&*<>/\\';
+    const lines = [];
+    const commands = [
+      'connecting to remote host...',
+      'authenticating user...',
+      'access granted',
+      'decrypting payload...',
+      'scanning ports 1-65535',
+      'bypassing firewall...',
+      'root@system:~# ',
+    ];
+    let cmdIndex = 0, charIndex = 0, timer = 0;
+
+    function draw(){
+      ctx2d.fillStyle = 'rgba(0,0,0,0.18)';
+      ctx2d.fillRect(0,0,w,h);
+
+      ctx2d.fillStyle = '#0f0';
+      ctx2d.font = '15px monospace';
+      for (let i=0;i<cols;i++){
+        const text = chars[Math.floor(Math.random()*chars.length)];
+        const x = i*16;
+        const y = drops[i]*16;
+        ctx2d.fillText(text, x, y);
+        if (y > h && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+
+      timer++;
+      if (timer % 2 === 0){
+        if (cmdIndex < commands.length){
+          const cmd = commands[cmdIndex];
+          if (charIndex <= cmd.length){
+            charIndex++;
+          } else {
+            lines.push(cmd);
+            if (lines.length > 8) lines.shift();
+            cmdIndex++; charIndex = 0;
+          }
+        } else {
+          cmdIndex = 0; lines.length = 0;
+        }
+      }
+
+      ctx2d.font = '16px monospace';
+      ctx2d.fillStyle = '#0f0';
+      let ly = h - 30 - lines.length*20;
+      lines.forEach(l => { ctx2d.fillText(l, 20, ly); ly += 20; });
+      if (cmdIndex < commands.length){
+        ctx2d.fillText(commands[cmdIndex].slice(0,charIndex) + '▌', 20, ly);
+      }
+
+      animId = requestAnimationFrame(draw);
+    }
+    draw();
+  }
+
+  fullscreenLayer.addEventListener('click', exitFullscreen);
+
+  const fsDownloadBtn = document.getElementById('fsDownloadBtn');
+  fsDownloadBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const w = window.innerWidth, h = window.innerHeight;
+    const snap = document.createElement('canvas');
+    snap.width = w; snap.height = h;
+    const sctx = snap.getContext('2d');
+    if (activeMode === 'color') {
+      sctx.fillStyle = currentColor;
+      sctx.fillRect(0,0,w,h);
+    } else {
+      sctx.drawImage(effectCanvas, 0, 0, w, h);
+    }
+    const link = document.createElement('a');
+    link.download = 'screen-' + activeMode + '.png';
+    link.href = snap.toDataURL('image/png');
+    link.click();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') exitFullscreen();
+  });
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) fullscreenLayer.classList.remove('visible');
+  });
+
+  document.getElementById('downloadBtn').addEventListener('click', () => {
+    const resSelect = document.getElementById('resolution').value;
+    const customW = document.getElementById('customW').value;
+    const customH = document.getElementById('customH').value;
+
+    let w = 1920, h = 1080;
+    if (customW && customH) {
+      w = parseInt(customW); h = parseInt(customH);
+    } else if (resSelect) {
+      [w, h] = resSelect.split('x').map(Number);
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = currentColor;
+    ctx.fillRect(0, 0, w, h);
+
+    const link = document.createElement('a');
+    link.download = 'color-screen.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+  // ---- Windows-style boot (generic, no logo) ----
+  function runWinBoot(){
+    const w = effectCanvas.width, h = effectCanvas.height;
+    const cx = w/2, cy = h/2;
+    let t = 0;
+    function draw(){
+      ctx2d.fillStyle = '#000000';
+      ctx2d.fillRect(0,0,w,h);
+      t += 0.07;
+      const dotCount = 6, radius = 30;
+      for (let i=0;i<dotCount;i++){
+        const a = (i/dotCount)*Math.PI*2 + t;
+        const dx = cx + Math.cos(a)*radius;
+        const dy = cy + Math.sin(a)*radius;
+        const fade = (Math.sin(t - i*0.5)+1)/2;
+        ctx2d.beginPath();
+        ctx2d.arc(dx,dy,6,0,Math.PI*2);
+        ctx2d.fillStyle = `rgba(255,255,255,${0.3+fade*0.7})`;
+        ctx2d.fill();
+      }
+      ctx2d.fillStyle = '#ffffff';
+      ctx2d.font = '22px -apple-system, Segoe UI, Arial, sans-serif';
+      ctx2d.textAlign = 'center';
+      ctx2d.fillText('Γίνεται προετοιμασία...', cx, cy+90);
+      animId = requestAnimationFrame(draw);
+    }
+    draw();
+  }
+
+  // ---- Mac-style boot (generic, no logo) ----
+  function runMacBoot(){
+    const w = effectCanvas.width, h = effectCanvas.height;
+    const cx = w/2, cy = h/2 - 20;
+    let t = 0;
+    function draw(){
+      ctx2d.fillStyle = '#f5f5f7';
+      ctx2d.fillRect(0,0,w,h);
+      t += 0.12;
+      const lines = 12, radius = 26;
+      for (let i=0;i<lines;i++){
+        const a = (i/lines)*Math.PI*2;
+        const alpha = ((i - (t % lines) + lines) % lines) / lines;
+        ctx2d.save();
+        ctx2d.translate(cx,cy);
+        ctx2d.rotate(a);
+        ctx2d.strokeStyle = `rgba(120,120,120,${0.15+alpha*0.7})`;
+        ctx2d.lineWidth = 4;
+        ctx2d.beginPath();
+        ctx2d.moveTo(radius,0);
+        ctx2d.lineTo(radius+14,0);
+        ctx2d.stroke();
+        ctx2d.restore();
+      }
+      ctx2d.fillStyle = '#333333';
+      ctx2d.font = '20px -apple-system, Segoe UI, Arial, sans-serif';
+      ctx2d.textAlign = 'center';
+      ctx2d.fillText('Φόρτωση...', cx, cy+90);
+      animId = requestAnimationFrame(draw);
+    }
+    draw();
+  }
+
+  // ---- Ubuntu-style boot (generic, no logo) ----
+  function runUbuntuBoot(){
+    const w = effectCanvas.width, h = effectCanvas.height;
+    const cx = w/2, cy = h/2;
+    let t = 0;
+    function draw(){
+      ctx2d.fillStyle = '#2c001e';
+      ctx2d.fillRect(0,0,w,h);
+      t += 0.05;
+      const dotCount = 5, spacing = 34;
+      const startX = cx - ((dotCount-1)*spacing)/2;
+      for (let i=0;i<dotCount;i++){
+        const phase = (t - i*0.4) % (Math.PI*2);
+        const scale = 0.5 + Math.abs(Math.sin(phase))*0.6;
+        ctx2d.beginPath();
+        ctx2d.arc(startX+i*spacing, cy, 10*scale, 0, Math.PI*2);
+        ctx2d.fillStyle = '#e95420';
+        ctx2d.fill();
+      }
+      ctx2d.fillStyle = '#ffffff';
+      ctx2d.font = '20px -apple-system, Segoe UI, Arial, sans-serif';
+      ctx2d.textAlign = 'center';
+      ctx2d.fillText('Ubuntu-style εκκίνηση', cx, cy+80);
+      animId = requestAnimationFrame(draw);
+    }
+    draw();
+  }
+
+  // ---- Football (generic, no real teams/logos) ----
+  function runFootball(){
+    const w = effectCanvas.width, h = effectCanvas.height;
+    let bx = w/2, by = h/2, vx = 4, vy = 3;
+    let scoreA = 0, scoreB = 0, frame = 0;
+    function draw(){
+      ctx2d.fillStyle = '#0b6e2f';
+      ctx2d.fillRect(0,0,w,h);
+      ctx2d.strokeStyle = 'rgba(255,255,255,0.6)';
+      ctx2d.lineWidth = 3;
+      ctx2d.strokeRect(20,20,w-40,h-40);
+      ctx2d.beginPath();
+      ctx2d.moveTo(w/2,20); ctx2d.lineTo(w/2,h-20);
+      ctx2d.stroke();
+      ctx2d.beginPath();
+      ctx2d.arc(w/2,h/2,60,0,Math.PI*2);
+      ctx2d.stroke();
+
+      bx += vx; by += vy;
+      if (bx < 40 || bx > w-40) { vx *= -1; frame%50===0 && (Math.random()>0.5 ? scoreA++ : scoreB++); }
+      if (by < 40 || by > h-40) vy *= -1;
+      frame++;
+
+      ctx2d.beginPath();
+      ctx2d.arc(bx,by,14,0,Math.PI*2);
+      ctx2d.fillStyle = '#ffffff';
+      ctx2d.fill();
+      ctx2d.strokeStyle = '#000';
+      ctx2d.lineWidth = 1.5;
+      ctx2d.stroke();
+
+      ctx2d.fillStyle = '#ffffff';
+      ctx2d.font = 'bold 34px -apple-system, Segoe UI, Arial, sans-serif';
+      ctx2d.textAlign = 'center';
+      ctx2d.fillText('Team A ' + scoreA + ' — ' + scoreB + ' Team B', w/2, 60);
+
+      animId = requestAnimationFrame(draw);
+    }
+    draw();
+  }
+
+  // ---- Basketball (generic, no real teams/logos) ----
+  function runBasketball(){
+    const w = effectCanvas.width, h = effectCanvas.height;
+    let bx = w/2, by = 80, vx = 5, vy = 0;
+    const gravity = 0.35;
+    let scoreA = 0, scoreB = 0;
+    function draw(){
+      ctx2d.fillStyle = '#c98a4b';
+      ctx2d.fillRect(0,0,w,h);
+      ctx2d.strokeStyle = 'rgba(255,255,255,0.5)';
+      ctx2d.lineWidth = 3;
+      ctx2d.strokeRect(20,20,w-40,h-40);
+      ctx2d.beginPath();
+      ctx2d.arc(w/2,h/2,70,0,Math.PI*2);
+      ctx2d.stroke();
+
+      vy += gravity;
+      bx += vx; by += vy;
+      if (by > h-60) { by = h-60; vy = -Math.abs(vy)*0.85; if (Math.random()>0.985) (Math.random()>0.5?scoreA++:scoreB++); }
+      if (bx < 40 || bx > w-40) vx *= -1;
+
+      ctx2d.beginPath();
+      ctx2d.arc(bx,by,18,0,Math.PI*2);
+      ctx2d.fillStyle = '#e6742c';
+      ctx2d.fill();
+      ctx2d.strokeStyle = '#3a1c00';
+      ctx2d.lineWidth = 2;
+      ctx2d.stroke();
+      ctx2d.beginPath();
+      ctx2d.moveTo(bx-18,by); ctx2d.lineTo(bx+18,by);
+      ctx2d.moveTo(bx,by-18); ctx2d.lineTo(bx,by+18);
+      ctx2d.stroke();
+
+      ctx2d.fillStyle = '#ffffff';
+      ctx2d.font = 'bold 34px -apple-system, Segoe UI, Arial, sans-serif';
+      ctx2d.textAlign = 'center';
+      ctx2d.fillText('Team A ' + scoreA + ' — ' + scoreB + ' Team B', w/2, 60);
+
+      animId = requestAnimationFrame(draw);
+    }
+    draw();
+  }
+
+  // ---- DVD bouncing logo screensaver ----
+  function runDVD(){
+    const w = effectCanvas.width, h = effectCanvas.height;
+    let x = w/2, y = h/2, vx = 3.5, vy = 2.8;
+    const boxW = 140, boxH = 60;
+    const colors = ['#ff3b3b','#3b82f6','#22c55e','#eab308','#a855f7','#ec4899','#14b8a6'];
+    let colorIdx = 0;
+    function draw(){
+      ctx2d.fillStyle = '#000000';
+      ctx2d.fillRect(0,0,w,h);
+      x += vx; y += vy;
+      let bounced = false;
+      if (x <= 0 || x+boxW >= w) { vx *= -1; bounced = true; }
+      if (y <= 0 || y+boxH >= h) { vy *= -1; bounced = true; }
+      if (bounced) colorIdx = (colorIdx+1) % colors.length;
+      ctx2d.fillStyle = colors[colorIdx];
+      ctx2d.font = 'bold 48px -apple-system, Segoe UI, Arial, sans-serif';
+      ctx2d.textAlign = 'left';
+      ctx2d.fillText('DVD', x, y+boxH/1.3);
+      animId = requestAnimationFrame(draw);
+    }
+    draw();
+  }
+
+  // ---- Flip clock ----
+  function runFlipClock(){
+    const w = effectCanvas.width, h = effectCanvas.height;
+    function draw(){
+      ctx2d.fillStyle = '#111111';
+      ctx2d.fillRect(0,0,w,h);
+      const now = new Date();
+      const timeStr = String(now.getHours()).padStart(2,'0') + ':' +
+                       String(now.getMinutes()).padStart(2,'0') + ':' +
+                       String(now.getSeconds()).padStart(2,'0');
+      const cx = w/2, cy = h/2;
+      ctx2d.textAlign = 'center';
+      ctx2d.font = 'bold ' + Math.min(w/7,200) + 'px monospace';
+      const boxW = Math.min(w/6, 170), boxH = boxW*1.3;
+      const totalW = timeStr.length * boxW * 0.62;
+      let startX = cx - totalW/2;
+      for (let i=0;i<timeStr.length;i++){
+        const ch = timeStr[i];
+        const bx = startX + i*boxW*0.62;
+        if (ch !== ':'){
+          ctx2d.fillStyle = '#222222';
+          ctx2d.fillRect(bx-boxW*0.28, cy-boxH/2, boxW*0.56, boxH);
+          ctx2d.strokeStyle = '#000000';
+          ctx2d.beginPath();
+          ctx2d.moveTo(bx-boxW*0.28, cy); ctx2d.lineTo(bx+boxW*0.28, cy);
+          ctx2d.stroke();
+        }
+        ctx2d.fillStyle = '#ffffff';
+        ctx2d.fillText(ch, bx, cy+boxH*0.16);
+      }
+      animId = requestAnimationFrame(draw);
+    }
+    draw();
+  }
+
+  // ---- No signal (static + bars) ----
+  function runNoSignal(){
+    const w = effectCanvas.width, h = effectCanvas.height;
+    const imgData = ctx2d.createImageData(w,h);
+    let blink = 0;
+    function draw(){
+      const data = imgData.data;
+      for (let i=0;i<data.length;i+=4){
+        const v = Math.random()*255;
+        data[i]=v; data[i+1]=v; data[i+2]=v; data[i+3]=255;
+      }
+      ctx2d.putImageData(imgData,0,0);
+
+      blink += 0.1;
+      if (Math.sin(blink) > 0){
+        ctx2d.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx2d.fillRect(w/2-160,h/2-40,320,80);
+        ctx2d.fillStyle = '#ffffff';
+        ctx2d.font = 'bold 32px monospace';
+        ctx2d.textAlign = 'center';
+        ctx2d.fillText('NO SIGNAL', w/2, h/2+10);
+      }
+      animId = requestAnimationFrame(draw);
+    }
+    draw();
+  }
+</script>
+
+</body>
+</html>
